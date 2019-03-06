@@ -494,7 +494,12 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 			} else {
 				return mkvarsol(lch, rch);
 			}
-		} else if (!lq and !rq)
+		}
+		else if (lt == GLOB_NODE or rt == GLOB_NODE)
+		{
+			return mkvarsol(lch, rch);
+		}
+		else if (!lq and !rq)
 			return SolutionSet(is_node_satisfiable(lch, rch));
 	}
 
@@ -990,10 +995,12 @@ bool Unify::inherit(const Handle& lh, const Handle& rh,
 	if (is_free_declared_variable(lc, lh) and is_free_declared_variable(rc, rh))
 		return inherit(get_union_type(lh), get_union_type(rh));
 
-	// If only rh is a free and declared variable then check whether lh
-	// type inherits from it (using Variables::is_type).
-	if (is_free_declared_variable(rc, rh))
-		return _variables.is_type(rh, lh);
+	// If only rh is a free variable, if its in _variable then check
+	// whether lh type inherits from it (using Variables::is_type),
+	// otherwise assume rh is the top type and thus anything inherits
+	// from it.
+	if (rc.is_free_variable(rh))
+        return not _variables.is_in_varset(rh) or _variables.is_type(rh, lh);
 
 	return false;
 }
