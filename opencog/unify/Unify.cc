@@ -536,6 +536,9 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 	Arity lh_arity(lh->get_arity());
 	Arity rh_arity(rh->get_arity());
 	if (lh_arity != rh_arity)
+		if (contain_glob(lh) or contain_glob(rh)) {
+			return ordered_glob_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
+		}
 		return SolutionSet();
 
 	if (is_unordered(rh))
@@ -1054,6 +1057,22 @@ bool Unify::is_node_satisfiable(const CHandle& lch, const CHandle& rch) const
 	    rch.is_free_variable() and not is_declared_variable(rch))
 		return content_eq(lch.handle, rch.handle);
 	return lch.is_node_satisfiable(rch);
+}
+
+bool Unify::contain_glob(const Handle &handle) const {
+	if (handle->get_type() == GLOB_NODE)
+		return true;
+	if (handle->is_link()){
+		for (const Handle& h : handle->getOutgoingSet()) {
+			if (contain_glob(h)) return true;
+		}
+	}
+	return false;
+}
+
+Unify::SolutionSet
+Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs, Context lhs_context, Context rhs_context) const {
+	return Unify::SolutionSet();
 }
 
 Variables merge_variables(const Variables& lhs, const Variables& rhs)
