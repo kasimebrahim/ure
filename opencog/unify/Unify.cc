@@ -1061,12 +1061,8 @@ bool Unify::is_node_satisfiable(const CHandle& lch, const CHandle& rch) const
 }
 
 bool Unify::contain_glob(const Handle &handle) const {
-	if (handle->get_type() == GLOB_NODE)
-		return true;
-	if (handle->is_link()){
-		for (const Handle& h : handle->getOutgoingSet()) {
-			if (contain_glob(h)) return true;
-		}
+	for (const Handle& h : handle->getOutgoingSet()) {
+		if (h->get_type() == GLOB_NODE) return true;
 	}
 	return false;
 }
