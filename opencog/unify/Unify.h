@@ -547,6 +547,8 @@ private:
 
 	std::set<HandleSeqSeq> split_globs(HandleSeq &globs, Arity s) const;
 
+	std::set<HandleSeqSeq> select_subset(HandleSeq &unt_globs, Arity s) const;
+
 	std::set<HandleSeqSeq> merge_globs(HandleSeqSeq &untyped_globs,
 	                                   HandleSeqSeq &typed_globs, Arity size) const;
 
