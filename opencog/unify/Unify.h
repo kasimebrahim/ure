@@ -137,6 +137,7 @@ public:
 	// Mapping from handle to arity pair
 	typedef std::pair<Arity, Arity> ArityPair;
 	typedef std::map<Handle, ArityPair> GlobScope;
+	typedef std::vector<std::pair<GlobScope, GlobScope>> ScopePairs;
 
 	// This is in fact a typed block but is merely named Block due to
 	// being so frequently used.
@@ -499,14 +500,13 @@ private:
 	                               Context lhs_context=Context(),
 	                               Context rhs_context=Context()) const;
 
-	void unify_map_set(SolutionSet &sol, const HandleSeq &ohs, std::set<GlobScope> &map_set,
+	void unify_map_set(SolutionSet &sol, const HandleSeq &ohs, GlobScope &map_set,
 	                   Context context_1, Context context_2) const;
 
 	/**
 	* This builds a map of left and right handles to unify.
 	*/
-	bool config_ordered_glob_unify(const HandleSeq&, const HandleSeq&,
-	                               std::set<GlobScope>&, std::set<GlobScope>&,
+	bool config_ordered_glob_unify(const HandleSeq&, const HandleSeq&, ScopePairs& scope_pairs,
 	                               Context lhs_context=Context(), Context rhs_context=Context()) const;
 
 	/**
@@ -730,6 +730,11 @@ private:
 	 * inherits rhs.
 	 */
 	bool inherit(const TypeSet& lhs, const TypeSet& rhs) const;
+
+	ScopePairs populate_scope(const HandleSeq &lhs, const HandleSeq &rhs, const GlobScope &left_unify_map,
+	                          const GlobScope &right_unify_map, const Arity i, const Arity j) const;
+
+	void register_var(Variables &vars, const Handle &handle, Type type) const;
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,
