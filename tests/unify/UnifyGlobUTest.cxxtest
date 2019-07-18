@@ -222,7 +222,8 @@ void UnifyGlobUTest::test_simple_glob9()
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{X, Q}, Q}, {{X, R}, R}, {{Y, P}, P}}});
+	Unify::SolutionSet expected({{{{X, Q}, Q}, {{X, R}, R}, {{Y, P}, P}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{Y, P}, P}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
