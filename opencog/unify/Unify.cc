@@ -1215,9 +1215,35 @@ Unify::SolutionSet Unify::join(const Partition& partition,
 	// Find all partition blocks that have elements in common with block
 	TypedBlockSeq common_blocks;
 	for (const TypedBlock &p_block : partition) {
-		auto inter = set_intersection(p_block.first, block.first);
-		if ((inter.size() == 1) and (inter.begin()->handle->get_type() == GLOB_NODE))
-			continue;
+		const auto inter = set_intersection(p_block.first, block.first);
+		if ((inter.size() == 1) and (inter.begin()->handle->get_type() == GLOB_NODE)) {
+			// TODO: check if the glob is the least abstract and just add to the common_blocks
+			Partition jp(partition);
+			jp.erase(p_block.first);
+
+			Handle lst;
+			HandleSeq seq;
+			if (p_block.second.handle->get_type() == LIST_LINK) {
+				seq = p_block.second.handle->getOutgoingSet();
+				seq.insert(seq.end(),
+				           block.second.handle->getOutgoingSet().begin(),
+				           block.second.handle->getOutgoingSet().end());
+			}
+			else if (block.second.handle->get_type() == LIST_LINK) {
+				seq = block.second.handle->getOutgoingSet();
+				seq.insert(seq.end(),
+				           p_block.second.handle->getOutgoingSet().begin(),
+				           p_block.second.handle->getOutgoingSet().end());
+			}
+			else {
+				seq = {p_block.second.handle, block.second.handle};
+			}
+			lst = createLink(seq, LIST_LINK);
+			const TypedBlock t_bl = {Block({*inter.begin(), CHandle(lst)}), CHandle(lst)};
+
+			jp.insert(t_bl);
+			return SolutionSet({jp});
+		}
 		if (not has_empty_intersection(block.first, p_block.first))
 			common_blocks.push_back(p_block);
 	}
