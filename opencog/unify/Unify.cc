@@ -194,9 +194,21 @@ Unify::TypedSubstitution Unify::typed_substitution(const Partition& partition,
 		CHandle least_abstract = find_least_abstract(block, pre);
 
 		// Build variable mapping
-		for (const CHandle& ch : block.first)
-			if (ch.is_free_variable())
+		for (const CHandle &ch : block.first) {
+			if (ch.is_free_variable() || ch.handle->get_type() == GLOB_NODE)
 				var2cval.insert({ch.handle, least_abstract});
+			else if (ch.handle->get_type() == LIST_LINK) {
+				HandleCHandleMap tmp;
+				for (const auto h : ch.handle->getOutgoingSet()) {
+					if (not (h->get_type() == GLOB_NODE)) {
+						tmp = {};
+						break;
+					}
+					tmp.insert({h, createLink(HandleSeq({h}), LIST_LINK)});
+				}
+				var2cval.insert(tmp.begin(), tmp.end());
+			}
+		}
 	}
 
 	// Calculate its closure
@@ -261,6 +273,15 @@ Unify::HandleCHandleMap Unify::substitution_closure(const HandleCHandleMap& var2
 		VariableListPtr varlist = gen_varlist(el.second);
 		const Variables& variables = varlist->get_variables();
 		HandleSeq values = variables.make_sequence(var2val);
+		if ((el.second.handle->get_type() == LIST_LINK) and
+		    (el.second.handle->get_arity() == 1) and
+		    (el.second.handle->getOutgoingAtom(0)->get_type() == GLOB_NODE)) {
+			el.second.handle = variables.substitute_nocheck(el.second.handle, values);
+			if (el.second.handle->get_type() == GLOB_NODE) {
+				el.second.handle = createLink(HandleSeq{el.second.handle}, LIST_LINK);
+				continue;
+			}
+		}
 		el.second.handle = variables.substitute_nocheck(el.second.handle, values);
 	}
 
@@ -281,11 +302,15 @@ Handle Unify::substitution_vardecl(const HandleCHandleMap& var2val) const
 
 	Variables ts_variables = _variables;
 
-	for (const auto& el : var2val)
+	for (const auto &el : var2val) {
 		// Make sure it is not a self substitution
-		if (el.first != el.second.handle)
+		if (el.second.handle->get_type() == LIST_LINK) {
+			if ((el.second.handle->get_arity() != 1) or
+			    (el.first != el.second.handle->getOutgoingAtom(0)))
+				ts_variables.erase(el.first);
+		} else if (el.first != el.second.handle)
 			ts_variables.erase(el.first);
-
+	}
 	return ts_variables.get_vardecl();
 }
 
