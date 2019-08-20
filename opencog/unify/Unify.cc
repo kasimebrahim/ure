@@ -1129,6 +1129,18 @@ Unify::SolutionSet Unify::mkvarsol(CHandle lch, CHandle rch) const
 	CHandle inter = type_intersection(lch, rch);
 	if (not inter)
 		return SolutionSet();
+	if ((inter == lch) and (rch.handle->get_type() == GLOB_NODE)) {
+		Handle lst = createLink(HandleSeq({lch.handle}), LIST_LINK);
+		Block pblock{CHandle(lst, lch.context), rch};
+		Partitions par{{{pblock, CHandle(lst, lch.context)}}};
+		return SolutionSet(par);
+	}
+	else if ((inter == rch) and (lch.handle->get_type() == GLOB_NODE)) {
+		Handle lst = createLink(HandleSeq({rch.handle}), LIST_LINK);
+		Block pblock{CHandle(lst, rch.context), lch};
+		Partitions par{{{pblock, CHandle(lst, rch.context)}}};
+		return SolutionSet(par);
+	}
 	else {
 		Block pblock{lch, rch};
 		Partitions par{{{pblock, inter}}};
