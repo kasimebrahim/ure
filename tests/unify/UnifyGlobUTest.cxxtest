@@ -41,7 +41,7 @@ private:
 	AtomSpace _as;
 	SchemeEval _eval;
 	Handle X, Y, P, Q, R, S, A, B, C, D, PQ, XP, RQSY, QRP, XY, lX, y, QRy, X2, Y2, XX2P,
-			QlXP, QlQRP, ABCXR, YCPQR, XYDABC, QRPyX2Y2, ABR;
+			QlXP, QlQRP, ABCXR, YCPQR, XYDABC, QRPyX2Y2, UNXY, UNQRP,ABR;
 	Context::VariablesStack X_varstack;
 
 public:
@@ -84,6 +84,9 @@ public:
 
 		HandleSeq seq = {X};
 		lX = al(LIST_LINK, seq);
+
+		UNXY = al(AND_LINK, {X, Y});
+		UNQRP = al(AND_LINK, {Q, R, P});
 	}
 
 	void setUp();
@@ -106,6 +109,8 @@ public:
 	void test_typed_glob3_alt();
 
 	void test_join();
+
+	void test_simple_unordered_glob3();
 };
 
 void UnifyGlobUTest::setUp(void)
@@ -366,6 +371,23 @@ void UnifyGlobUTest::test_join()
 
 	std::cout << "result = " << oc_to_string(result) << std::endl;
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_simple_unordered_glob3()
+{
+	Unify unify(UNQRP, UNXY);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{X, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
+	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}},
+	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{Y, P}, P}},
+	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{X, P}, P}},
+	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
+	                             {{{Y, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}}});
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
 }
