@@ -629,7 +629,8 @@ Unify::unordered_glob_sub_unify(const GPart part, Context lhscontext,
 		if (!ss.is_satisfiable()) {
 			return SolutionSet();
 		}
-		sol.insert(ss.begin(), ss.end());
+		if(not sol.is_satisfiable()) sol = SolutionSet(true);
+		sol = join(sol, ss);
 	}
 	return sol;
 }
@@ -863,9 +864,8 @@ Unify::unify_globs(const Unify::SolutionsPairs &term_solutions, Unify::GBlock &l
 				GPart part(l_gpart);
 				part.insert(r_gpart.begin(), r_gpart.end());
 				auto _ss = unordered_glob_sub_unify(part, lhs_context, rhs_context);
-				// TODO join ss, _ss
-				_ss.insert(ss.begin(), ss.end());
-				p_sol.insert(_ss.begin(), _ss.end());
+				SolutionSet tmp = join(ss, _ss);
+				p_sol.insert(tmp.begin(), tmp.end());
 			}
 			sol.insert(p_sol.begin(), p_sol.end());
 		}
