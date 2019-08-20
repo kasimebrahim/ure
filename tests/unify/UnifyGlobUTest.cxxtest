@@ -42,8 +42,8 @@ private:
 	SchemeEval _eval;
 	Handle X, Y, P, Q, R, S, A, B, C, D, PQ, XP, RQSY, QRP, XY, lX, y, QRy, X2, Y2, XX2P,
 			QlXP, QlQRP, ABCXR, YCPQR, XYDABC, QRPyX2Y2, ABR;
-	Handle U, V, W, T, C1, C2, UNXY, UNQRP, UNC1C2, UNC1C2S, UNXYP, UNXYPQ, UNSC1U, UNXYUVW, UNSTDC1C2,
-			UNUVAND, UNSDRAND;
+	Handle U, V, W, T, O, C1, C2, UNXY, UNQRP, UNC1C2, UNC1C2S, UNXYP, UNXYPQ, UNSC1U, UNXYUVW, UNSTOC1C2,
+			UNUVAND, UNSORAND, UNQRPS, UNQSC1U;
 
 	Context::VariablesStack X_varstack;
 
@@ -68,7 +68,7 @@ public:
 		R = an(PREDICATE_NODE, "R");
 		S = an(PREDICATE_NODE, "S");
 		T = an(PREDICATE_NODE, "T");
-		D = an(PREDICATE_NODE, "D");
+		O = an(PREDICATE_NODE, "O");
 
 		A = an(CONCEPT_NODE, "A");
 		B = an(CONCEPT_NODE, "B");
@@ -97,16 +97,18 @@ public:
 
 		UNXY = al(AND_LINK, {X, Y});
 		UNQRP = al(AND_LINK, {Q, R, P});
+		UNQRPS = al(AND_LINK, {Q, R, P, S});
 		UNC1C2 = al(AND_LINK, {C1, C2});
 		UNC1C2S = al(AND_LINK, {C1, C2, S});
 		UNXYP = al(AND_LINK, {X, Y, P});
 		UNXYPQ = al(AND_LINK, {X, Y, P, Q});
 		UNSC1U = al(AND_LINK, {S, C1, U});
+		UNQSC1U = al(AND_LINK, {Q, S, C1, U});
 		UNXYUVW = al(AND_LINK, {X, Y, U, V, W});
-		UNSTDC1C2 = al(AND_LINK, {S, T, D, C1, C2});
+		UNSTOC1C2 = al(AND_LINK, {S, T, O, C1, C2});
 
 		UNUVAND = al(AND_LINK, {U, V, UNXY});
-		UNSDRAND = al(AND_LINK, {S, D, R, UNC1C2});
+		UNSORAND = al(AND_LINK, {S, O, R, UNC1C2});
 	}
 
 	void setUp();
@@ -133,11 +135,14 @@ public:
 	void test_join();
 
 	void test_simple_unordered_glob3();
+	void test_simple_unordered_glob3_alt();
 	void test_simple_unordered_glob4();
 	void test_simple_unordered_glob5();
 	void test_simple_unordered_glob6();
 	void test_simple_unordered_glob7();
 	void test_simple_unordered_glob8();
+
+	void test_typed_unordered_glob1();
 };
 
 void UnifyGlobUTest::setUp(void)
@@ -408,12 +413,24 @@ void UnifyGlobUTest::test_simple_unordered_glob3()
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{X, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
-	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}},
-	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{Y, P}, P}},
-	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{X, P}, P}},
-	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
-	                             {{{Y, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}}});
+	Unify::SolutionSet expected({{{{X, Q}, Q}, {{X, R}, R}, {{Y, P}, P}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{X, P}, P}},
+	                             {{{Y, Q}, Q}, {{X, R}, R}, {{X, P}, P}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{Y, P}, P}},
+	                             {{{Y, Q}, Q}, {{X, R}, R}, {{Y, P}, P}},
+	                             {{{Y, Q}, Q}, {{Y, R}, R}, {{X, P}, P}}});
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_simple_unordered_glob3_alt()
+{
+	Unify unify(UNC1C2, UNXY);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{X, C1}, C1}, {{Y, C2}, C2}}, {{{X, C2}, C2}, {{Y, C1}, C1}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
@@ -425,12 +442,12 @@ void UnifyGlobUTest::test_simple_unordered_glob4()
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{X, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
-	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}},
-	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{X, P}, P}},
-	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{Y, P}, P}},
-	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
-	                             {{{Y, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}}});
+	Unify::SolutionSet expected({{{{X, Q}, Q}, {{X, R}, R}, {{Y, P}, P}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{X, P}, P}},
+	                             {{{Y, Q}, Q}, {{X, R}, R}, {{X, P}, P}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{Y, P}, P}},
+	                             {{{Y, Q}, Q}, {{X, R}, R}, {{Y, P}, P}},
+	                             {{{Y, Q}, Q}, {{Y, R}, R}, {{X, P}, P}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
@@ -438,16 +455,24 @@ void UnifyGlobUTest::test_simple_unordered_glob4()
 
 void UnifyGlobUTest::test_simple_unordered_glob5()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-	                                   "(GlobNode \"$X\")"
-	                                   "(TypeNode \"PredicateNode\"))");
-
-	Unify unify(UNXYP, UNSC1U, left_vardecl);
+	Unify unify(UNXY, UNQRPS);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{X, S}, S}, {{Y, C1}, C1}, {{U, P}, P}}});
-
+	Unify::SolutionSet expected({{{{X, Q}, Q}, {{X, R}, R}, {{X, P}, P}, {{Y, S}, S}},
+	                             {{{X, Q}, Q}, {{X, R}, R}, {{Y, P}, P}, {{X, S}, S}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{X, P}, P}, {{X, S}, S}},
+	                             {{{Y, Q}, Q}, {{X, R}, R}, {{X, P}, P}, {{X, S}, S}},
+	                             {{{Y, Q}, Q}, {{Y, R}, R}, {{Y, S}, S}, {{X, P}, P}},
+	                             {{{Y, Q}, Q}, {{Y, R}, R}, {{X, S}, S}, {{Y, P}, P}},
+	                             {{{Y, Q}, Q}, {{X, R}, R}, {{Y, S}, S}, {{Y, P}, P}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{Y, S}, S}, {{Y, P}, P}},
+	                             {{{X, Q}, Q}, {{X, R}, R}, {{Y, P}, P}, {{Y, S}, S}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{X, P}, P}, {{Y, S}, S}},
+	                             {{{Y, Q}, Q}, {{X, R}, R}, {{X, P}, P}, {{Y, S}, S}},
+	                             {{{X, Q}, Q}, {{Y, R}, R}, {{Y, P}, P}, {{X, S}, S}},
+	                             {{{Y, Q}, Q}, {{X, R}, R}, {{Y, P}, P}, {{X, S}, S}},
+	                             {{{Y, Q}, Q}, {{Y, R}, R}, {{X, P}, P}, {{X, S}, S}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
@@ -459,8 +484,8 @@ void UnifyGlobUTest::test_simple_unordered_glob6()
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{U, Q}, Q}}, {{{U, P}, P}}, {{{Y, C1}, C1}},
-	                             {{{Y, S}, S}}, {{{X, C1}, C1}}, {{{X, S}, S}}});
+	Unify::SolutionSet expected({{{{U, Q}, Q}, {{U, P}, P}, {{Y, C1}, C1}, {{X, S}, S}},
+	                             {{{Y, S}, S}, {{X, C1}, C1}, {{U, Q}, Q}, {{U, P}, P}}});
 
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
@@ -469,11 +494,7 @@ void UnifyGlobUTest::test_simple_unordered_glob6()
 
 void UnifyGlobUTest::test_simple_unordered_glob7()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-	                                   "(GlobNode \"$X\")"
-	                                   "(TypeNode \"PredicateNode\"))");
-
-	Unify unify(UNXYUVW, UNSTDC1C2);
+	Unify unify(UNXYUVW, UNSTOC1C2);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
@@ -485,13 +506,39 @@ void UnifyGlobUTest::test_simple_unordered_glob7()
 
 void UnifyGlobUTest::test_simple_unordered_glob8()
 {
-	Unify unify(UNUVAND, UNSDRAND);
+	Unify unify(UNUVAND, UNSORAND);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{U, S}, S}}, {{{U, D}, D}}, {{{Y, C1}, C1}, {{X, C2}, C2}},
-	                             {{{Y, C2}, C2}, {{X, C1}, C1}}, {{{V, R}, R}}, {{{U, R}, R}},
-	                             {{{V, D}, D}}, {{{V, S}, S}}});
+	Unify::SolutionSet expected({{{{U, S}, S}, {{U, O}, O}, {{V, R}, R}, {{Y, C1}, C1}, {{X, C2}, C2}},
+	                             {{{U, S}, S}, {{U, O}, O}, {{V, R}, R}, {{Y, C2}, C2}, {{X, C1}, C1}},
+	                             {{{U, S}, S}, {{V, O}, O}, {{U, R}, R}, {{Y, C1}, C1}, {{X, C2}, C2}},
+	                             {{{U, S}, S}, {{V, O}, O}, {{U, R}, R}, {{Y, C2}, C2}, {{X, C1}, C1}},
+	                             {{{V, S}, S}, {{U, O}, O}, {{U, R}, R}, {{Y, C1}, C1}, {{X, C2}, C2}},
+	                             {{{V, S}, S}, {{U, O}, O}, {{U, R}, R}, {{Y, C2}, C2}, {{X, C1}, C1}},
+	                             {{{V, S}, S}, {{V, O}, O}, {{U, R}, R}, {{Y, C1}, C1}, {{X, C2}, C2}},
+	                             {{{V, S}, S}, {{V, O}, O}, {{U, R}, R}, {{Y, C2}, C2}, {{X, C1}, C1}},
+	                             {{{V, S}, S}, {{U, O}, O}, {{V, R}, R}, {{Y, C1}, C1}, {{X, C2}, C2}},
+	                             {{{V, S}, S}, {{U, O}, O}, {{V, R}, R}, {{Y, C2}, C2}, {{X, C1}, C1}},
+	                             {{{U, S}, S}, {{V, O}, O}, {{V, R}, R}, {{Y, C1}, C1}, {{X, C2}, C2}},
+	                             {{{U, S}, S}, {{V, O}, O}, {{V, R}, R}, {{Y, C2}, C2}, {{X, C1}, C1}}});
+
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_typed_unordered_glob1()
+{
+	Handle left_vardecl = _eval.eval_h("(TypedVariable"
+	                                   "(GlobNode \"$X\")"
+	                                   "(TypeNode \"PredicateNode\"))");
+
+	Unify unify(UNXYP, UNQSC1U, left_vardecl);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{X, Q}, Q}, {{X, S}, S}, {{Y, C1}, C1}, {{U, P}, P}}});
 
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
