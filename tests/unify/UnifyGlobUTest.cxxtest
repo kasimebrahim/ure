@@ -111,6 +111,7 @@ public:
 	void test_join();
 
 	void test_simple_unordered_glob3();
+	void test_simple_unordered_glob4();
 };
 
 void UnifyGlobUTest::setUp(void)
@@ -385,6 +386,23 @@ void UnifyGlobUTest::test_simple_unordered_glob3()
 	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}},
 	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{Y, P}, P}},
 	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{X, P}, P}},
+	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
+	                             {{{Y, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}}});
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_simple_unordered_glob4()
+{
+	Unify unify(UNXY, UNQRP);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{X, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
+	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}},
+	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{X, P}, P}},
+	                             {{{X, Q}, Q}}, {{{Y, R}, R}}, {{{Y, P}, P}},
 	                             {{{Y, Q}, Q}}, {{{X, R}, R}}, {{{Y, P}, P}},
 	                             {{{Y, Q}, Q}}, {{{Y, R}, R}}, {{{X, P}, P}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
