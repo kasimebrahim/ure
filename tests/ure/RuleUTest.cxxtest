@@ -38,13 +38,13 @@ class RuleUTest: public CxxTest::TestSuite
 private:
 	AtomSpace _as;
 	SchemeEval _eval;
-	Handle deduction_rule_h,
+	Handle deduction_rule_h, dummy_glob_rule_h, expected_dummy_glob_rule_h,
 		deduction_implication_rule_h, deduction_inheritance_rule_h,
 		implication_scope_to_implication_rule_h,
 		implication_and_lambda_factorization_rule_h,
 		closed_lambda_introduction_rule_h,
 		conditional_direct_evaluation_implication_scope_rule_h,
-		X, A, V, CT, Typed_X, P_body_var, P, Q, Eval_P, Eval_Q;
+		X, G, A, V, CT, Typed_X, P_body_var, P, Q, Eval_P, Eval_Q;
 
 public:
 	RuleUTest() : _eval(&_as)
@@ -54,6 +54,7 @@ public:
 	void setUp();
 	void tearDown();
 
+	void test_unify_dummy_glob();
 	void test_unify_target_deduction_1();
 	void test_unify_target_deduction_2();
 	void test_unify_target_deduction_3();
@@ -96,6 +97,7 @@ void RuleUTest::setUp()
 	eval_result = _eval.eval("(load-from-path \"implication-and-lambda-factorization-rule.scm\")");
 	eval_result = _eval.eval("(load-from-path \"closed-lambda-introduction-rule.scm\")");
 	eval_result = _eval.eval("(load-from-path \"conditional-direct-evaluation.scm\")");
+	eval_result = _eval.eval("(load-from-path \"dummy_glob_rule.scm\")");
 
 	deduction_rule_h =
 		_eval.eval_h("(MemberLink (stv 1 1)"
@@ -121,8 +123,15 @@ void RuleUTest::setUp()
 		_eval.eval_h("(MemberLink (stv 1 1)"
 		             "   conditional-direct-evaluation-implication-scope-rule-name"
 		             "   (ConceptNode \"URE\"))");
+	dummy_glob_rule_h =
+			_eval.eval_h("(MemberLink (stv 1 1)"
+			             "   dummy-glob-rule-name"
+			             "   (ConceptNode \"URE\"))");
+	expected_dummy_glob_rule_h =
+			_eval.eval_h("expected-dummy-glob-rule");
 
 	X = an(VARIABLE_NODE, "$X");
+	G = an(GLOB_NODE, "$Y");
 	A = an(CONCEPT_NODE, "A");
 	V = an(VARIABLE_NODE, "$V");
 	CT = an(TYPE_NODE, "ConceptNode");
@@ -137,6 +146,26 @@ void RuleUTest::setUp()
 void RuleUTest::tearDown()
 {
 	_as.clear();
+}
+
+void RuleUTest::test_unify_dummy_glob()
+{
+	Rule dummy_glob_rule(dummy_glob_rule_h);
+	Handle target = al(ORDERED_LINK, G, Q, P);
+	RuleTypedSubstitutionMap rules = dummy_glob_rule.unify_target(target);
+
+	TS_ASSERT_EQUALS(rules.size(), 1)
+
+	Handle rule = rules.begin()->first.get_rule();
+
+	std::cout << "rule = " << oc_to_string(rule);
+	std::cout << "expected = " << oc_to_string(expected_dummy_glob_rule_h);
+
+	ScopeLinkPtr expected_sc = ScopeLinkCast(expected_dummy_glob_rule_h);
+
+	// TODO: ScopeLink::is_epual method failed on alpha equivalent glob_node
+	//  requires a fix.
+	TS_ASSERT(expected_sc->is_equal(rule));
 }
 
 void RuleUTest::test_unify_target_deduction_1()
