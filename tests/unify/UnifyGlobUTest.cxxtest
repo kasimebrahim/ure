@@ -116,6 +116,7 @@ public:
 	// TODO: THIS UNIT TESTS ARE VALID UNTIL JOINING SOLUTIONS THAT CONTAIN
 	//  GLOB_NODE IS SUPPORTED. UPDATE AS SOON AS JOIN IS IMPLEMENTED.
 	void test_simple_glob();
+	void test_simple_glob1();
 	void test_simple_glob2();
 	void test_simple_glob3();
 	void test_simple_glob4();
@@ -152,14 +153,30 @@ void UnifyGlobUTest::setUp(void)
 void UnifyGlobUTest::test_simple_glob()
 {
 	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-			                            "(GlobNode \"g\")"
-			                            "(TypeNode \"PredicateNode\"))");
+	                                   "(GlobNode \"$G\")"
+	                                   "(TypeNode \"PredicateNode\"))");
 
 	Unify unify(X, P, left_vardecl);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}}});
+	Unify::SolutionSet expected(false);
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_simple_glob1()
+{
+	Handle left_vardecl = _eval.eval_h("(TypedVariable"
+	                                   "(GlobNode \"$G\")"
+	                                   "(TypeNode \"PredicateNode\"))");
+
+	Unify unify(X, Y, left_vardecl);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{Y, al(LIST_LINK, {X})}, al(LIST_LINK, {X})}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
@@ -179,11 +196,7 @@ void UnifyGlobUTest::test_simple_glob2()
 
 void UnifyGlobUTest::test_simple_glob3()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-			                                   "(GlobNode \"g\")"
-			                                   "(TypeNode \"PredicateNode\"))");
-
-	Unify unify(XP, QRP, left_vardecl);
+	Unify unify(XP, QRP);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
@@ -207,11 +220,7 @@ void UnifyGlobUTest::test_simple_glob4()
 
 void UnifyGlobUTest::test_simple_glob5()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-			                                   "(GlobNode \"g\")"
-			                                   "(TypeNode \"PredicateNode\"))");
-
-	Unify unify(XX2P, QRP, left_vardecl);
+	Unify unify(XX2P, QRP);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
@@ -224,11 +233,7 @@ void UnifyGlobUTest::test_simple_glob5()
 
 void UnifyGlobUTest::test_simple_glob5_alt()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-	                                   "(GlobNode \"g\")"
-	                                   "(TypeNode \"PredicateNode\"))");
-
-	Unify unify(XX2P, RQSY, left_vardecl);
+	Unify unify(XX2P, RQSY);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
@@ -245,11 +250,7 @@ void UnifyGlobUTest::test_simple_glob5_alt()
 
 void UnifyGlobUTest::test_simple_glob6()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-			                                   "(GlobNode \"g\")"
-			                                   "(TypeNode \"PredicateNode\"))");
-
-	Unify unify(XP, QRy, left_vardecl);
+	Unify unify(XP, QRy);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
@@ -261,11 +262,7 @@ void UnifyGlobUTest::test_simple_glob6()
 
 void UnifyGlobUTest::test_simple_glob7()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-			                                   "(GlobNode \"g\")"
-			                                   "(TypeNode \"PredicateNode\"))");
-
-	Unify unify(QlXP, QlQRP, left_vardecl);
+	Unify unify(QlXP, QlQRP);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
@@ -375,12 +372,14 @@ void UnifyGlobUTest::test_typed_glob2()
 
 void UnifyGlobUTest::test_typed_glob3()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
-	                                   "(GlobNode \"$X\")"
-	                                   "(TypeNode \"PredicateNode\"))");
-	Handle right_vardecl = _eval.eval_h("(TypedVariable"
+	Handle left_vardecl = Handle();
+	Handle right_vardecl = _eval.eval_h("(VariableList"
+									 "(TypedVariable"
+	                                    "(GlobNode \"$X\")"
+	                                    "(TypeNode \"PredicateNode\"))"
+									 "(TypedVariable"
 	                                    "(GlobNode \"$Y\")"
-	                                    "(TypeNode \"ConceptNode\"))");
+	                                    "(TypeNode \"ConceptNode\")))");
 
 	Unify unify(ABR, XY, left_vardecl, right_vardecl);
 	Unify::SolutionSet result = unify();
@@ -394,12 +393,14 @@ void UnifyGlobUTest::test_typed_glob3()
 
 void UnifyGlobUTest::test_typed_glob3_alt()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
+	Handle left_vardecl = Handle();
+	Handle right_vardecl = _eval.eval_h("(VariableList"
+									 "(TypedVariable"
+	                                   "(GlobNode \"$X\")"
+	                                   "(TypeNode \"ConceptNode\"))"
+									"(TypedVariable"
 	                                   "(GlobNode \"$Y\")"
-	                                   "(TypeNode \"PredicateNode\"))");
-	Handle right_vardecl = _eval.eval_h("(TypedVariable"
-	                                    "(GlobNode \"$X\")"
-	                                    "(TypeNode \"ConceptNode\"))");
+	                                   "(TypeNode \"PredicateNode\")))");
 
 	Unify unify(ABR, XY, left_vardecl, right_vardecl);
 	Unify::SolutionSet result = unify();
@@ -623,10 +624,13 @@ void UnifyGlobUTest::test_simple_unordered_glob8()
 
 void UnifyGlobUTest::test_typed_unordered_glob1()
 {
-	Handle left_vardecl = _eval.eval_h("(TypedVariable"
+	Handle left_vardecl = _eval.eval_h("(VariableList"
+									"(TypedVariable"
 	                                   "(GlobNode \"$X\")"
-	                                   "(TypeNode \"PredicateNode\"))");
-
+	                                   "(TypeNode \"PredicateNode\"))"
+	                                "(TypedVariable"
+	                                   "(GlobNode \"$Y\")"
+	                                   "(TypeNode \"ConceptNode\")))");
 	Unify unify(UNXYP, UNQSC1U, left_vardecl);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
