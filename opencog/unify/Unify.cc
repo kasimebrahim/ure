@@ -698,7 +698,8 @@ void Unify::parse_type(const HandleSeq &seq, Unify::GBlock &glob_seq, Unify::GBl
 		Type type = handle->get_type();
 		// TODO handle VariableNode
 		if (type == GLOB_NODE) {
-			if (_variables.is_in_varset(handle)) {
+			if (_variables.is_in_varset(handle) and
+			    (_variables._simple_typemap.find(handle) != _variables._simple_typemap.end())) {
 				auto ts = (*_variables._simple_typemap.find(handle)).second;
 				// TODO: ts is TypeSet figure out when and why a variable would
 				//  contain multiple types. and edit the /*ts.begin()/ accordingly.
