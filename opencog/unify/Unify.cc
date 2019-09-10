@@ -1541,14 +1541,12 @@ bool Unify::inherit(const Handle& lh, const Handle& rh,
 	// whether lh type inherits from it (using Variables::is_type),
 	// otherwise assume rh is the top type and thus anything inherits
 	// from it.
-	if (rc.is_free_variable(rh))
-        return not _variables.is_in_varset(rh) or _variables.is_type(rh, lh);
-	else if (rt == GLOB_NODE) {
-		if (lt == LIST_LINK) {
+	if (is_free_declared_variable(rc, rh)) {
+		if (rt == GLOB_NODE and lt == LIST_LINK) {
 			const Handle temp = lh->get_arity() > 0 ? lh->getOutgoingAtom(0) : Handle();
-			return not _variables.is_in_varset(rh) or _variables.is_type(rh, temp);
+			return _variables.is_type(rh, temp);
 		}
-		return not _variables.is_in_varset(rh) or _variables.is_type(rh, lh);
+		return _variables.is_type(rh, lh);
 	}
 
 	return false;
