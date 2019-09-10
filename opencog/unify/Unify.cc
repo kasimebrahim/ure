@@ -730,7 +730,7 @@ void Unify::insert_type(Unify::GBlock &vector, const Handle &handle, Type type, 
 	}
 
 	for (HandleSeq &v : vector) {
-		if (type == (*v.begin())->get_type()) {
+		if (!v.empty() and (type == (*v.begin())->get_type())) {
 			v.push_back(handle);
 			return;
 		}
@@ -945,7 +945,7 @@ std::set<HandleSeqSeq> Unify::split_globs(HandleSeq &globs, Arity s) const
 {
 	std::set<HandleSeqSeq> result;
 
-	if (s == 1) result = {{globs}};
+	if (s <= 1) result = {{globs}};
 
 	else if (s == 2) {
 		// TODO Handle redundant selects
