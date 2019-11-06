@@ -1813,6 +1813,40 @@ bool Unify::one_side_glob(const HandleSeq &lhs, const HandleSeq &rhs,
                           const Context &lhs_context, const Context &rhs_context, SolutionSet &_sol,
                           SolutionSet &sol, Variables &local_variables, Arity &i, Arity &j, bool inv) const
 {
+	// lhs_handle or rhs_handle is glob. If it has been unified before, then check
+	// type restriction from local_variables [can it be met with rhs_handle].
+	if (local_variables._simple_typemap.find(lhs_handle) ==
+	    local_variables._simple_typemap.end()) {
+		// invert indices when the glob node is on the rhs.
+		// [certainly not the right way to handle it]
+		auto cont = not inv ?
+		            recurse(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
+		                    rhs_context, _sol, sol, local_variables, i, j) :
+		            recurse(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
+		                    rhs_context, _sol, sol, local_variables, j, i);
+		j++;
+		return cont;
+	} else {
+		auto lt = (*local_variables._simple_typemap.find(lhs_handle)).second;
+		if (*lt.begin() == rhs_handle->get_type()) {
+			auto cont = not inv ?
+			            recurse(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
+			                    rhs_context, _sol, sol, local_variables, i, j) :
+			            recurse(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
+			                    rhs_context, _sol, sol, local_variables, j, i);
+			j++;
+			return cont;
+		} else {
+			// lhs glob node has been unified with another type than that can be
+			// met with rhs_handle. If it is unified with handle from rhs [not
+			// from the prev recursion if there was any] then continue otherwith
+			// unification has failed.
+			if (j > 0) {
+				i++;
+				return true;
+			} else return false;
+		}
+	}
 }
 
 bool Unify::recurse(const HandleSeq &lhs, const HandleSeq &rhs,
