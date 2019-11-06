@@ -118,12 +118,15 @@ public:
 	//  GLOB_NODE IS SUPPORTED. UPDATE AS SOON AS JOIN IS IMPLEMENTED.
 	void test_simple_glob();
 	void test_simple_glob1();
+	void test_simple_glob1_alt1();
+	void test_simple_glob1_alt2();
 	void test_simple_glob2();
-	void test_simple_glob2_alt();
-	void test_simple_glob2_alt2();
-	void test_simple_glob2_alt3();
+	void test_simple_glob2_alt1();
 	void test_simple_glob3();
+	void test_simple_glob3_alt1();
 	void test_simple_glob4();
+	void test_simple_glob4_alt1();
+	void test_simple_glob4_alt2();
 	void test_simple_glob5();
 	void test_simple_glob5_alt();
 	void test_simple_glob6();
@@ -187,7 +190,7 @@ void UnifyGlobUTest::test_simple_glob1()
 	TS_ASSERT_EQUALS(result, expected);
 }
 
-void UnifyGlobUTest::test_simple_glob2()
+void UnifyGlobUTest::test_simple_glob1_alt1()
 {
 	Unify unify(X, PQ);
 	Unify::SolutionSet result = unify();
@@ -199,7 +202,20 @@ void UnifyGlobUTest::test_simple_glob2()
 	TS_ASSERT_EQUALS(result, expected);
 }
 
-void UnifyGlobUTest::test_simple_glob2_alt()
+void UnifyGlobUTest::test_simple_glob1_alt2()
+{
+	Unify unify(XY, PQ);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) << std::endl;
+
+	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {P})}, al(LIST_LINK, {P})},
+			                             {{Y, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})}}});
+	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_simple_glob2()
 {
 	Unify unify(XYV, al(LIST_LINK, U));
 	Unify::SolutionSet result = unify();
@@ -211,7 +227,7 @@ void UnifyGlobUTest::test_simple_glob2_alt()
 	TS_ASSERT_EQUALS(result, expected);
 }
 
-void UnifyGlobUTest::test_simple_glob2_alt2()
+void UnifyGlobUTest::test_simple_glob2_alt1()
 {
 	Unify unify(al(LIST_LINK, U), XYV);
 	Unify::SolutionSet result = unify();
@@ -223,7 +239,37 @@ void UnifyGlobUTest::test_simple_glob2_alt2()
 	TS_ASSERT_EQUALS(result, expected);
 }
 
-void UnifyGlobUTest::test_simple_glob2_alt3()
+void UnifyGlobUTest::test_simple_glob3()
+{
+	Unify unify(QRP, XY);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {Q, R})}, al(LIST_LINK, {Q, R})},
+			                             {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}},
+	                             {{{X, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})},
+			                             {{Y, al(LIST_LINK, {R, P})}, al(LIST_LINK, {R, P})}}});
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_simple_glob3_alt1()
+{
+	Unify unify(XY, QRP);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {Q, R})}, al(LIST_LINK, {Q, R})},
+			                             {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}},
+	                             {{{X, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})},
+			                             {{Y, al(LIST_LINK, {R, P})}, al(LIST_LINK, {R, P})}}});
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_simple_glob4()
 {
 	Unify unify(al(LIST_LINK, A, B, X, Y, P), al(LIST_LINK, X2, U, P));
 	Unify::SolutionSet result = unify();
@@ -236,7 +282,7 @@ void UnifyGlobUTest::test_simple_glob2_alt3()
 	TS_ASSERT_EQUALS(result, expected);
 }
 
-void UnifyGlobUTest::test_simple_glob3()
+void UnifyGlobUTest::test_simple_glob4_alt1()
 {
 	Unify unify(XP, QRP);
 	Unify::SolutionSet result = unify();
@@ -248,7 +294,7 @@ void UnifyGlobUTest::test_simple_glob3()
 	TS_ASSERT_EQUALS(result, expected);
 }
 
-void UnifyGlobUTest::test_simple_glob4()
+void UnifyGlobUTest::test_simple_glob4_alt2()
 {
 	Unify unify(lX, PQ);
 	Unify::SolutionSet result = unify();
@@ -328,14 +374,12 @@ void UnifyGlobUTest::test_simple_glob8()
 
 void UnifyGlobUTest::test_simple_glob9()
 {
-	Unify unify(XY, QRP);
+	Unify unify(XY, ABR);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {Q, R})}, al(LIST_LINK, {Q, R})},
-							   {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}},
-	                             {{{X, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})},
-							   {{Y, al(LIST_LINK, {R, P})}, al(LIST_LINK, {R, P})}}});
+	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {A, B})}, al(LIST_LINK, {A, B})},
+							   {{Y, al(LIST_LINK, {R})}, al(LIST_LINK, {R})}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
@@ -343,14 +387,16 @@ void UnifyGlobUTest::test_simple_glob9()
 
 void UnifyGlobUTest::test_simple_glob10()
 {
-	Unify unify(QRP, XY);
+	Unify unify(ABR, XY);
 	Unify::SolutionSet result = unify();
 	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
 
-	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {Q, R})}, al(LIST_LINK, {Q, R})},
-			                             {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}},
-	                             {{{X, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})},
-			                             {{Y, al(LIST_LINK, {R, P})}, al(LIST_LINK, {R, P})}}});
+	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {A, B})}, al(LIST_LINK, {A, B})},
+			                             {{Y, al(LIST_LINK, {R})}, al(LIST_LINK, {R})}}});
+//	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {Q, R})}, al(LIST_LINK, {Q, R})},
+//			                             {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}},
+//	                             {{{X, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})},
+//			                             {{Y, al(LIST_LINK, {R, P})}, al(LIST_LINK, {R, P})}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
