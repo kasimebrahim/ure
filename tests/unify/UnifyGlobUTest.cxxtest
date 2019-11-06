@@ -365,9 +365,38 @@ void UnifyGlobUTest::test_typed_glob2()
 							   {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}, {{y, D}, D},
 							   {{X2, al(LIST_LINK, {A})}, al(LIST_LINK, {A})},
 							   {{Y2, al(LIST_LINK, {B, C})}, al(LIST_LINK, {B, C})}}});
+
+	Unify::SolutionSet expected2({{{{X, al(LIST_LINK, {Q, R, P})}, al(LIST_LINK, {Q, R, P})},
+							   {{Y, al(LIST_LINK, {y})}, al(LIST_LINK, {y})},
+							   {{X2, al(LIST_LINK, {D, A, B})}, al(LIST_LINK, {D, A, B})},
+							   {{Y2, al(LIST_LINK, {C})}, al(LIST_LINK, {C})}},
+							   {{{X, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})},
+							   {{Y, al(LIST_LINK, {R, P})}, al(LIST_LINK, {R, P})},{{y, D}, D},
+							   {{X2, al(LIST_LINK, {A, B})}, al(LIST_LINK, {A, B})},
+							   {{Y2, al(LIST_LINK, {C})}, al(LIST_LINK, {C})}},
+							   {{{X, al(LIST_LINK, {Q, R})}, al(LIST_LINK, {Q, R})},
+							   {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}, {{y, D}, D},
+							   {{X2, al(LIST_LINK, {A, B})}, al(LIST_LINK, {A, B})},
+							   {{Y2, al(LIST_LINK, {C})}, al(LIST_LINK, {C})}},
+							   {{{X, al(LIST_LINK, {Q, R, P})}, al(LIST_LINK, {Q, R, P})},
+							   {{Y, al(LIST_LINK, {y})}, al(LIST_LINK, {y})},
+							   {{X2, al(LIST_LINK, {D, A})}, al(LIST_LINK, {D, A})},
+							   {{Y2, al(LIST_LINK, {B, C})}, al(LIST_LINK, {B, C})}},
+							   {{{X, al(LIST_LINK, {Q, R, P})}, al(LIST_LINK, {Q, R, P})},
+							   {{Y, al(LIST_LINK, {y})}, al(LIST_LINK, {y})},
+							   {{Y2, al(LIST_LINK, {A, B, C})}, al(LIST_LINK, {A, B, C})},
+							   {{X2, al(LIST_LINK, {D})}, al(LIST_LINK, {D})}},
+							   {{{X, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})},
+							   {{Y, al(LIST_LINK, {R, P})}, al(LIST_LINK, {R, P})}, {{y, D}, D},
+							   {{X2, al(LIST_LINK, {A})}, al(LIST_LINK, {A})},
+							   {{Y2, al(LIST_LINK, {B, C})}, al(LIST_LINK, {B, C})}},
+							   {{{X, al(LIST_LINK, {Q, R})}, al(LIST_LINK, {Q, R})},
+							   {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}, {{y, D}, D},
+							   {{X2, al(LIST_LINK, {A})}, al(LIST_LINK, {A})},
+							   {{Y2, al(LIST_LINK, {B, C})}, al(LIST_LINK, {B, C})}}});
 	std::cout << "\n expected\n" << oc_to_string(expected) << std::endl;
 
-	TS_ASSERT_EQUALS(result, expected);
+	TS_ASSERT((result==expected2) or (result==expected));
 }
 
 void UnifyGlobUTest::test_typed_glob3()
