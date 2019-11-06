@@ -1854,6 +1854,23 @@ bool Unify::recurse(const HandleSeq &lhs, const HandleSeq &rhs,
                    const Context &lhs_context, const Context &rhs_context, SolutionSet &_sol,
                    SolutionSet &sol, Variables &local_variables, Arity i, Arity j) const
 {
+	// unify lhs_handle and rhs_handle.
+	const auto head = unify(lhs_handle, rhs_handle, lhs_context, rhs_context);
+	if (not head.is_satisfiable()) return false;
+	// register type restriction on the lhs_handle[glob] for next handles
+	// should be unified with lhs_handle if they meet this type restriction.
+	register_var(local_variables, lhs_handle, rhs_handle->get_type());
+	_sol = join(_sol, head);
+	HandleSeq _lhs(lhs);
+	HandleSeq _rhs(rhs);
+	_lhs.erase(_lhs.begin(), _lhs.begin() + i + 1);
+	_rhs.erase(_rhs.begin(), _rhs.begin() + j + 1);
+	// recurse to the remaining handle seq with lhs and rhs handles removed.
+	auto tail = ordered_glob_unify(_lhs, _rhs, lhs_context, rhs_context, local_variables);
+	auto tmp = join(_sol, tail);
+	sol.insert(tmp.begin(), tmp.end());
+	return true;
+}
 
 void Unify::register_var(Variables &vars, const Handle &handle, Type type) const
 {
