@@ -535,12 +535,14 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 	// they have the same arity
 	Arity lh_arity(lh->get_arity());
 	Arity rh_arity(rh->get_arity());
-	if (lh_arity != rh_arity) {
-		if (contain_glob(lh) or contain_glob(rh)) {
+	if (contain_glob(lh) or contain_glob(rh)) {
+		if (is_unordered(rh))
+			return unordered_glob_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
+		else
 			return ordered_glob_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
-		}
-		return SolutionSet();
 	}
+
+	else if (lh_arity != rh_arity) return SolutionSet();
 
 	if (is_unordered(rh))
 		return unordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
