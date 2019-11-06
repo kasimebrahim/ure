@@ -1072,6 +1072,12 @@ Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs, Context lh
 	return Unify::SolutionSet();
 }
 
+Unify::SolutionSet
+Unify::unordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs, Context lhs_context, Context rhs_context) const
+{
+	return Unify::SolutionSet();
+}
+
 Variables merge_variables(const Variables& lhs, const Variables& rhs)
 {
 	Variables new_vars(lhs);
