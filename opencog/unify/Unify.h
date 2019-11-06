@@ -511,9 +511,10 @@ private:
 	 * Unify all elements of lhs with all elements of rhs, in the
 	 * provided order where atleast one contains a globnode.
 	 */
-	SolutionSet ordered_glob_unify(const HandleSeq& lhs, const HandleSeq& rhs,
-	                               Context lhs_context=Context(),
-	                               Context rhs_context=Context()) const;
+	SolutionSet ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
+	                                   Context lhs_context = Context(),
+	                                   Context rhs_context = Context(),
+	                                   Variables local_variables = Variables()) const;
 
 	Unify::SolutionSet
 	unordered_glob_sub_unify(const GPart part,
@@ -799,7 +800,19 @@ private:
 	 */
 	bool is_node_satisfiable(const CHandle& lch, const CHandle& rch) const;
 
+	void register_var(Variables &vars, const Handle &handle, Type type) const;
+
 	Handle link_from_block(const Type t, const Block &) const;
+
+	bool recurse(const HandleSeq &lhs, const HandleSeq &rhs, const Handle &lhs_handle,
+	             const Handle &rhs_handle, const Context &lhs_context, const Context &rhs_context,
+	             SolutionSet &_sol, SolutionSet &sol, Variables &local_variables,
+	             Arity i, Arity j) const;
+
+	bool one_side_glob(const HandleSeq &lhs, const HandleSeq &rhs, const Handle &lhs_handle,
+	                   const Handle &rhs_handle, const Context &lhs_context,
+	                   const Context &rhs_context, SolutionSet &_sol, SolutionSet &sol,
+	                   Variables &local_variables, Arity &i, Arity &j, bool inv=false) const;
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,

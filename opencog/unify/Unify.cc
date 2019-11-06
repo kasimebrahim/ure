@@ -34,6 +34,7 @@
 #include <opencog/atoms/core/RewriteLink.h>
 #include <opencog/atoms/pattern/PatternUtils.h>
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/atoms/core/TypeNode.h>
 
 namespace opencog {
 
@@ -1688,8 +1689,140 @@ bool Unify::contain_glob(const Handle &handle) const {
 }
 
 Unify::SolutionSet
-Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs, Context lhs_context, Context rhs_context) const {
-	return Unify::SolutionSet();
+Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
+                              Context lhs_context, Context rhs_context,
+                              Variables local_variables) const
+{
+	SolutionSet sol(false);
+
+	Arity lhs_arity(lhs.size());
+	Arity rhs_arity(rhs.size());
+
+	Arity i=0, j=0;
+	local_variables.extend(_variables);
+	SolutionSet _sol(true);
+	while (i < lhs_arity or j < rhs_arity) {
+		const Handle lhs_handle = i < lhs_arity ? lhs[i] : Handle();
+		const Type lhs_type = lhs_handle ? lhs_handle->get_type() : NOTYPE;
+
+		const Handle rhs_handle = j < rhs_arity ? rhs[j] : Handle();
+		const Type rhs_type = rhs_handle ? rhs_handle->get_type() : NOTYPE;
+
+		if ((!lhs_handle) and (!rhs_handle)) return SolutionSet(true);
+		if ((!lhs_handle) or (!rhs_handle))
+			return sol == SolutionSet(true) ? SolutionSet(false) : sol;
+
+		if ((lhs_type == GLOB_NODE) and (rhs_type == GLOB_NODE)) {
+			// both handles are glob nodes. Unify the two then go three ways
+			// one:- erase right globe and recurse on the rest.
+			// two:- erase both globes and recurse on the rest.
+			// three:- increment left index and continue loop to the rest.
+			if (local_variables._simple_typemap.find(rhs_handle) == local_variables._simple_typemap.end() and
+			    local_variables._simple_typemap.find(lhs_handle) == local_variables._simple_typemap.end()) {
+				// Neither of the glob nodes have been unified before.
+				auto head = unify(rhs_handle, lhs_handle, rhs_context, lhs_context);
+				if (not head.is_satisfiable()) return SolutionSet(false);
+				_sol = join(_sol, head);
+
+				// both globs are type restricted from now on.
+				auto tmp_vars = Variables(local_variables);
+				register_var(local_variables, lhs_handle, rhs_type);
+				register_var(local_variables, rhs_handle, lhs_type);
+				HandleSeq _lhs(lhs);
+				HandleSeq _rhs(rhs);
+				// Try recursing through the rest by erasing the glob on the rhs and with both erased.
+				_rhs.erase(_rhs.begin(), _rhs.begin() + j + 1);
+				const auto tail_1 = ordered_glob_unify(lhs, _rhs,
+				                                     lhs_context, rhs_context, local_variables);
+
+				_lhs.erase(_lhs.begin(), _lhs.begin() + i + 1);
+				const auto tail_2 = ordered_glob_unify(_lhs, _rhs,
+				                                     lhs_context, rhs_context, local_variables);
+
+				if (tail_1.is_satisfiable()) {
+					const auto tmp = join(_sol, tail_1);
+					sol.insert(tmp.begin(), tmp.end());
+				}
+				if (tail_2.is_satisfiable()) {
+					const auto tmp = join(_sol, tail_2);
+					sol.insert(tmp.begin(), tmp.end());
+				}
+				i++;
+				continue;
+			} else if (local_variables._simple_typemap.find(lhs_handle) !=
+			           local_variables._simple_typemap.end()) {
+				// lhs glob has been unified before. check if its type
+				// restriction is met with rhs glob.
+				auto lt = (*local_variables._simple_typemap.find(lhs_handle)).second;
+				if (*lt.begin() == rhs_handle->get_type()) {
+					auto cont = recurse(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
+					                    rhs_context, _sol, sol, local_variables, i, j);
+					if (cont) {
+						j++;
+						continue;
+					} else return SolutionSet(false);
+				}
+			} else if (local_variables._simple_typemap.find(rhs_handle) !=
+			           local_variables._simple_typemap.end()) {
+				// rhs glob has been unified before. check if its type
+				// restriction is met with lhs glob.
+				auto rt = (*local_variables._simple_typemap.find(rhs_handle)).second;
+				if (*rt.begin() == lhs_handle->get_type()) {
+					auto cont = recurse(lhs, rhs, rhs_handle, lhs_handle, lhs_context,
+					                    rhs_context, _sol, sol, local_variables, i, j);
+					if (cont) {
+						i++;
+						continue;
+					} else return SolutionSet(false);
+				}
+			}
+		} else if (lhs_type == GLOB_NODE) {
+			// only lhs_handle is glob. This could go two ways after unifying lhs
+			// and rhs handles.
+			// one:- erase both handles and recurse on the rest.
+			// two:- increament rhs index and iterate to the rest of rhs.
+			if (one_side_glob(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
+			                  rhs_context, _sol, sol, local_variables, i, j)) continue;
+			return SolutionSet(false);
+		} else if (rhs_type == GLOB_NODE) {
+			// this is simetric to when the lhs_handle is glob.
+			if (one_side_glob(lhs, rhs, rhs_handle, lhs_handle, lhs_context,
+			                  rhs_context, _sol, sol, local_variables, j, i, true)) continue;
+			return SolutionSet(false);
+		}
+		else {
+			// if neither lhs nor rhs handles are glob just continue unifying.
+			auto head = unify(lhs_handle, rhs_handle, lhs_context, rhs_context);
+			if (!head.is_satisfiable())
+				return sol;
+			_sol = join(_sol, head);
+			HandleSeq _lhs(lhs);
+			HandleSeq _rhs(rhs);
+			i++;
+			j++;
+			continue;
+		}
+		return sol == SolutionSet(true) ? SolutionSet(false) : sol;
+	}
+	sol.insert(_sol.begin(), _sol.end());
+	return sol;
+}
+
+bool Unify::one_side_glob(const HandleSeq &lhs, const HandleSeq &rhs,
+                          const Handle &lhs_handle, const Handle &rhs_handle,
+                          const Context &lhs_context, const Context &rhs_context, SolutionSet &_sol,
+                          SolutionSet &sol, Variables &local_variables, Arity &i, Arity &j, bool inv) const
+{
+}
+
+bool Unify::recurse(const HandleSeq &lhs, const HandleSeq &rhs,
+                   const Handle &lhs_handle, const Handle &rhs_handle,
+                   const Context &lhs_context, const Context &rhs_context, SolutionSet &_sol,
+                   SolutionSet &sol, Variables &local_variables, Arity i, Arity j) const
+{
+
+void Unify::register_var(Variables &vars, const Handle &handle, Type type) const
+{
 }
 
 Variables merge_variables(const Variables& lhs, const Variables& rhs)
