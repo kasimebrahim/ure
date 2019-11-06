@@ -1823,6 +1823,14 @@ bool Unify::recurse(const HandleSeq &lhs, const HandleSeq &rhs,
 
 void Unify::register_var(Variables &vars, const Handle &handle, Type type) const
 {
+	TypeNodePtr v = createTypeNode(type);
+	HandleSeq hs;
+	hs.push_back(handle);
+	hs.push_back(HandleCast(v));
+	Handle vlink = createLink(hs, TYPED_VARIABLE_LINK);
+	VariableListPtr vlist = createVariableList(vlink);
+
+	vars.extend(vlist->get_variables());
 }
 
 Variables merge_variables(const Variables& lhs, const Variables& rhs)
