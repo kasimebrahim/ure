@@ -653,6 +653,9 @@ private:
 	 */
 	TypedBlock join(const TypedBlock& lhs, const TypedBlock& rhs) const;
 
+	std::tuple<Unify::Block, Unify::TypedBlock, Unify::TypedBlock>
+	_set_intersection(TypedBlock &lhs, TypedBlock &rhs) const;
+
 	/**
 	 * Unify all terms that are not in the intersection of block and
 	 * each block of common_blocks.
@@ -795,6 +798,8 @@ private:
 	 * undeclared variables), or alpha-equivalent.
 	 */
 	bool is_node_satisfiable(const CHandle& lch, const CHandle& rch) const;
+
+	Handle link_from_block(const Type t, const Block &) const;
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,

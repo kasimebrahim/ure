@@ -138,6 +138,7 @@ public:
 	void test_typed_glob3_alt();
 
 	void test_join();
+	void test_join2();
 
 	void test_simple_unordered_glob3();
 	void test_simple_unordered_glob3_alt();
@@ -498,6 +499,28 @@ void UnifyGlobUTest::test_join()
 
 	std::cout << "result = " << oc_to_string(result) << std::endl;
 	std::cout << "expected = " << oc_to_string(expected) << std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_join2()
+{
+	Unify unify(X, Y);
+	Unify::Block b1({X, al(LIST_LINK, {U})});
+	Unify::Block b2({V, al(LIST_LINK, {U})});
+	Unify::Block b3({Y, al(LIST_LINK, {U})});
+	Unify::SolutionSet s1({{{b1, al(LIST_LINK, {U})}}});
+	Unify::SolutionSet s2({{{b2, al(LIST_LINK, {U})}}});
+	Unify::SolutionSet s3({{{b3, al(LIST_LINK, {U})}}});
+
+	auto r = unify.join(s1, s2);
+	auto result = unify.join(r, s3);
+
+	Unify::Block bj({U, al(LIST_LINK, {X, V, Y})});
+	Unify::SolutionSet expected({{{bj, al(LIST_LINK, {X, V, Y})}}});
+
+	std::cout << "\n result = " << oc_to_string(result) << std::endl;
+	std::cout << "\n expected = " << oc_to_string(expected) << std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
 }

@@ -1235,17 +1235,23 @@ Unify::SolutionSet Unify::join(const SolutionSet& sol,
 	return result;
 }
 
-Unify::SolutionSet Unify::join(const Partition& partition,
-                               const TypedBlock& block) const
+Unify::SolutionSet Unify::join(const Partition& _partition,
+                               const TypedBlock& _block) const
 {
+	Partition partition = _partition;
+	TypedBlock block = _block;
+
 	// Find all partition blocks that have elements in common with block
 	TypedBlockSeq common_blocks;
-	for (const TypedBlock &p_block : partition) {
-		const auto inter = set_intersection(p_block.first, block.first);
+	for (TypedBlock &_p_block : partition) {
+		const auto res = _set_intersection(_p_block, block);
+		const auto inter = std::get<0>(res);
+		TypedBlock p_block = std::get<1>(res);
+		TypedBlock block = std::get<2>(res);
 		if ((inter.size() == 1) and (inter.begin()->handle->get_type() == GLOB_NODE)) {
 			// TODO: check if the glob is the least abstract and just add to the common_blocks
 			Partition jp(partition);
-			jp.erase(p_block.first);
+			jp.erase(_p_block.first);
 
 			Handle lst;
 			HandleSeq seq;
@@ -1317,6 +1323,77 @@ Unify::TypedBlock Unify::join(const TypedBlock& lhs, const TypedBlock& rhs) cons
     OC_ASSERT(lhs.second and rhs.second, "Can only join 2 satisfiable blocks");
 	return {set_union(lhs.first, rhs.first),
 			type_intersection(lhs.second, rhs.second)};
+}
+
+std::tuple<Unify::Block, Unify::TypedBlock, Unify::TypedBlock>
+Unify::_set_intersection(TypedBlock& lhs, TypedBlock& rhs) const
+{
+	auto lit = lhs.first;
+	auto rit = rhs.first;
+	auto inter = set_intersection(lit, rit);
+	if ((inter.size() == 1) and
+	    (inter.begin()->handle->get_type() == LIST_LINK) and
+	    (inter.begin()->handle->getOutgoingSet().size() == 1)) {
+		lit = lhs.first;
+		rit = rhs.first;
+
+		lit.erase(*inter.begin());
+		auto l_link = link_from_block(LIST_LINK, lit);
+		rit.erase(*inter.begin());
+		auto r_link = link_from_block(LIST_LINK, rit);
+
+
+		lit.clear();
+		lit.insert(l_link);
+		lit.insert(*(inter.begin()->handle->getOutgoingSet().begin()));
+
+		rit.clear();
+		rit.insert(r_link);
+		rit.insert(*(inter.begin()->handle->getOutgoingSet().begin()));
+
+		TypedBlock _lhs = {lit, l_link};
+		TypedBlock _rhs = {rit, r_link};
+		return {{*(inter.begin()->handle->getOutgoingSet().begin())}, _lhs, _rhs};
+	} else if ((lhs.second.handle->get_type() == LIST_LINK) and
+	           (rhs.second.handle->get_type() == LIST_LINK)) {
+		auto l_out = lhs.second.handle->getOutgoingSet();
+		lit.erase(lhs.second);
+		auto l_g = lit.begin()->handle;
+
+		auto r_out = rhs.second.handle->getOutgoingSet();
+		rit.erase(rhs.second);
+		auto r_g = rit.begin()->handle;
+
+		auto _inter = find(l_out.begin(), l_out.end(), r_g);
+		const bool is_left = _inter != l_out.end();
+		_inter = is_left ? _inter : find(r_out.begin(), r_out.end(), l_g);
+		if ((_inter != r_out.end()) and
+		    ((*_inter)->get_type() == GLOB_NODE)) {
+			if (is_left) {
+				auto l_second = link_from_block(LIST_LINK, lit);
+				lit.insert(*_inter);
+				TypedBlock _lhs = {lit, l_second};
+
+				return {{CHandle(*_inter)}, _lhs, rhs};
+			} else {
+				auto r_second = link_from_block(LIST_LINK, rit);
+				rit.insert(*_inter);
+				TypedBlock _rhs = {rit, r_second};
+
+				return {{CHandle(*_inter)}, lhs, _rhs};
+			}
+		}
+	}
+	return {inter, lhs, rhs};
+}
+
+Handle Unify::link_from_block(const Type t, const Block& block) const
+{
+	HandleSeq seq;
+	for (const CHandle ch : block) {
+		seq.push_back(ch.handle);
+	}
+	return createLink(seq, LIST_LINK);
 }
 
 Unify::SolutionSet Unify::subunify(const TypedBlockSeq& common_blocks,
