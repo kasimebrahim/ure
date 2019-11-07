@@ -813,6 +813,10 @@ private:
 	                   const Handle &rhs_handle, const Context &lhs_context,
 	                   const Context &rhs_context, SolutionSet &_sol, SolutionSet &sol,
 	                   Variables &local_variables, Arity &i, Arity &j, bool inv=false) const;
+
+	inline bool is_type_unrestricted(const Variables&, const Handle&) const;
+
+	inline bool is_type_unrestricted(const Variables &vars1, const Variables &vars2, const Handle &) const;
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,
