@@ -1808,7 +1808,7 @@ Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
 
 inline bool Unify::is_type_unrestricted(const Variables &vars1, const Variables &vars2, const Handle &handle) const
 {
-	return is_type_unrestricted(vars1, handle) or is_type_unrestricted(vars2, handle);
+	return is_type_unrestricted(vars1, handle) and is_type_unrestricted(vars2, handle);
 }
 
 inline bool Unify::is_type_unrestricted(const Variables &vars, const Handle &handle) const
