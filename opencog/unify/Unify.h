@@ -817,6 +817,11 @@ private:
 	inline bool is_type_unrestricted(const Variables&, const Handle&) const;
 
 	inline bool is_type_unrestricted(const Variables &vars1, const Variables &vars2, const Handle &) const;
+
+	inline TypeSet get_type_restrictions(const Variables &vars, const Handle &handle) const;
+
+	inline TypeSet get_type_restrictions(const Variables &vars1,
+	                                     const Variables &vars2, const Handle &handle) const;
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,

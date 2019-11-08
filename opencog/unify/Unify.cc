@@ -1699,7 +1699,6 @@ Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
 	Arity rhs_arity(rhs.size());
 
 	Arity i=0, j=0;
-	local_variables.extend(_variables);
 	SolutionSet _sol(true);
 	while (i < lhs_arity or j < rhs_arity) {
 		const Handle lhs_handle = i < lhs_arity ? lhs[i] : Handle();
@@ -1717,8 +1716,8 @@ Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
 			// one:- erase right globe and recurse on the rest.
 			// two:- erase both globes and recurse on the rest.
 			// three:- increment left index and continue loop to the rest.
-			if (is_type_unrestricted(local_variables, rhs_handle) and
-			    is_type_unrestricted(local_variables, lhs_handle)) {
+			if (is_type_unrestricted(_variables, local_variables, rhs_handle) and
+			    is_type_unrestricted(_variables, local_variables, lhs_handle)) {
 				// Neither of the glob nodes have been unified before.
 				auto head = unify(rhs_handle, lhs_handle, rhs_context, lhs_context);
 				if (not head.is_satisfiable()) return SolutionSet(false);
@@ -1749,10 +1748,10 @@ Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
 				}
 				i++;
 				continue;
-			} else if (!is_type_unrestricted(local_variables, lhs_handle)) {
+			} else if (!is_type_unrestricted(_variables, local_variables, lhs_handle)) {
 				// lhs glob has been unified before. check if its type
 				// restriction is met with rhs glob.
-				auto lt = (*local_variables._simple_typemap.find(lhs_handle)).second;
+				auto lt = get_type_restrictions(_variables, local_variables, lhs_handle);
 				if (*lt.begin() == rhs_handle->get_type()) {
 					auto cont = recurse(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
 					                    rhs_context, _sol, sol, local_variables, i, j);
@@ -1761,10 +1760,10 @@ Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
 						continue;
 					} else return SolutionSet(false);
 				}
-			} else if (!is_type_unrestricted(local_variables, rhs_handle)) {
+			} else if (!is_type_unrestricted(_variables, local_variables, rhs_handle)) {
 				// rhs glob has been unified before. check if its type
 				// restriction is met with lhs glob.
-				auto rt = (*local_variables._simple_typemap.find(rhs_handle)).second;
+				auto rt = get_type_restrictions(_variables, local_variables, rhs_handle);;
 				if (*rt.begin() == lhs_handle->get_type()) {
 					auto cont = recurse(lhs, rhs, rhs_handle, lhs_handle, lhs_context,
 					                    rhs_context, _sol, sol, local_variables, i, j);
@@ -1816,6 +1815,18 @@ inline bool Unify::is_type_unrestricted(const Variables &vars, const Handle &han
 	return vars._simple_typemap.find(handle) == vars._simple_typemap.end();
 }
 
+inline TypeSet Unify::get_type_restrictions(const Variables &vars1,
+		const Variables &vars2, const Handle &handle) const
+{
+	const auto tps = get_type_restrictions(vars1, handle);
+	return tps.empty() ? get_type_restrictions(vars2, handle) : tps;
+}
+
+inline TypeSet Unify::get_type_restrictions(const Variables &vars, const Handle &handle) const
+{
+	return is_type_unrestricted(vars, handle) ? TypeSet{} : (*vars._simple_typemap.find(handle)).second;
+}
+
 bool Unify::one_side_glob(const HandleSeq &lhs, const HandleSeq &rhs,
                           const Handle &lhs_handle, const Handle &rhs_handle,
                           const Context &lhs_context, const Context &rhs_context, SolutionSet &_sol,
@@ -1823,7 +1834,7 @@ bool Unify::one_side_glob(const HandleSeq &lhs, const HandleSeq &rhs,
 {
 	// lhs_handle or rhs_handle is glob. If it has been unified before, then check
 	// type restriction from local_variables [can it be met with rhs_handle].
-	if (is_type_unrestricted(local_variables, lhs_handle)) {
+	if (is_type_unrestricted(_variables, local_variables, lhs_handle)) {
 		// invert indices when the glob node is on the rhs.
 		// [certainly not the right way to handle it]
 		auto cont = not inv ?
@@ -1834,7 +1845,7 @@ bool Unify::one_side_glob(const HandleSeq &lhs, const HandleSeq &rhs,
 		j++;
 		return cont;
 	} else {
-		auto lt = (*local_variables._simple_typemap.find(lhs_handle)).second;
+		auto lt = get_type_restrictions(_variables, local_variables, lhs_handle);
 		if (*lt.begin() == rhs_handle->get_type()) {
 			auto cont = not inv ?
 			            recurse(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
