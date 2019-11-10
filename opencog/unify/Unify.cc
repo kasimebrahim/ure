@@ -1759,6 +1759,11 @@ Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
 						j++;
 						continue;
 					} else return SolutionSet(false);
+				} else if (is_type_unrestricted(_variables, local_variables, rhs_handle) and
+				           is_type_unrestricted(local_variables, lhs_handle)) {
+					if (one_side_glob(lhs, rhs, rhs_handle, lhs_handle, lhs_context,
+					                  rhs_context, _sol, sol, local_variables, j, i, true)) continue;
+					return SolutionSet(false);
 				}
 			} else if (!is_type_unrestricted(_variables, local_variables, rhs_handle)) {
 				// rhs glob has been unified before. check if its type
@@ -1771,6 +1776,11 @@ Unify::ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
 						i++;
 						continue;
 					} else return SolutionSet(false);
+				} else if (is_type_unrestricted(_variables, local_variables, lhs_handle) and
+						is_type_unrestricted(local_variables, rhs_handle)) {
+					if (one_side_glob(lhs, rhs, lhs_handle, rhs_handle, lhs_context,
+					                  rhs_context, _sol, sol, local_variables, i, j)) continue;
+					return SolutionSet(false);
 				}
 			}
 		} else if (lhs_type == GLOB_NODE) {
