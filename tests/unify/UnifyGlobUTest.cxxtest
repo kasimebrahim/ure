@@ -40,7 +40,7 @@ class UnifyGlobUTest :  public CxxTest::TestSuite
 private:
 	AtomSpace _as;
 	SchemeEval _eval;
-	Handle X, Y, P, Q, R, S, A, B, C, D, PQ, XP, RQSY, QRP, XY, XYV, lX, y, QRy, X2, Y2, XX2P,
+	Handle X, Y, P, Q, R, S, A, B, C, D, PQ, XP, RQSY, QRP, XY, UPQ, XYV, lX, y, QRy, X2, Y2, XX2P,
 			QlXP, QlQRP, ABCXR, YCPQR, XYDABC, QRPyX2Y2, ABR;
 	Handle U, V, W, T, O, C1, C2, UNXY, UNQRP, UNC1C2, UNC1C2S, UNXYP, UNXYPQ, UNSC1U, UNXYUVW, UNSTOC1C2,
 			UNUVAND, UNSORAND, UNQRPS, UNQSC1U;
@@ -79,6 +79,7 @@ public:
 
 		PQ = al(LIST_LINK, {P, Q});
 		XP = al(LIST_LINK, {X, P});
+		UPQ = al(LIST_LINK, {U, P, Q});
 		RQSY = al(LIST_LINK, {R, Q, S, Y});
 		XY = al(LIST_LINK, {X, Y});
 		XYV = al(LIST_LINK, {X, Y, V});
@@ -139,6 +140,8 @@ public:
 	void test_typed_glob2();
 	void test_typed_glob3();
 	void test_typed_glob3_alt();
+	void test_typed_glob4();
+	void test_typed_glob4_alt1();
 
 	void test_join();
 	void test_join2();
@@ -393,10 +396,6 @@ void UnifyGlobUTest::test_simple_glob10()
 
 	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {A, B})}, al(LIST_LINK, {A, B})},
 			                             {{Y, al(LIST_LINK, {R})}, al(LIST_LINK, {R})}}});
-//	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {Q, R})}, al(LIST_LINK, {Q, R})},
-//			                             {{Y, al(LIST_LINK, {P})}, al(LIST_LINK, {P})}},
-//	                             {{{X, al(LIST_LINK, {Q})}, al(LIST_LINK, {Q})},
-//			                             {{Y, al(LIST_LINK, {R, P})}, al(LIST_LINK, {R, P})}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
@@ -525,6 +524,50 @@ void UnifyGlobUTest::test_typed_glob3_alt()
 
 	Unify::SolutionSet expected({{{{X, al(LIST_LINK, {A, B})}, al(LIST_LINK, {A, B})},
 							   {{Y, al(LIST_LINK, {R})}, al(LIST_LINK, {R})}}});
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_typed_glob4()
+{
+	Handle left_vardecl = Handle();
+	Handle right_vardecl = _eval.eval_h("(VariableList"
+	                                    "  (TypedVariable"
+	                                    "    (GlobNode \"$X\")"
+	                                    "    (TypeNode \"PredicateNode\"))"
+	                                    "  (TypedVariable"
+	                                    "    (GlobNode \"$Y\")"
+	                                    "    (TypeNode \"PredicateNode\")))");
+
+	Unify unify(UPQ, XY, left_vardecl, right_vardecl);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{U, al(LIST_LINK, {X})}, al(LIST_LINK, {X})},
+			                             {{Y, al(LIST_LINK, {P, Q})}, al(LIST_LINK, {P, Q})}}});
+	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
+
+	TS_ASSERT_EQUALS(result, expected);
+}
+
+void UnifyGlobUTest::test_typed_glob4_alt1()
+{
+	Handle left_vardecl = _eval.eval_h("(VariableList"
+	                                    "  (TypedVariable"
+	                                    "    (GlobNode \"$X\")"
+	                                    "    (TypeNode \"PredicateNode\"))"
+	                                    "  (TypedVariable"
+	                                    "    (GlobNode \"$Y\")"
+	                                    "    (TypeNode \"PredicateNode\")))");
+	Handle right_vardecl = Handle();
+
+	Unify unify(XY, UPQ, left_vardecl, right_vardecl);
+	Unify::SolutionSet result = unify();
+	std::cout<< "\n result\n" << oc_to_string(result) <<std::endl;
+
+	Unify::SolutionSet expected({{{{U, al(LIST_LINK, {X})}, al(LIST_LINK, {X})},
+			                             {{Y, al(LIST_LINK, {P, Q})}, al(LIST_LINK, {P, Q})}}});
 	std::cout<< "\n expected\n" << oc_to_string(expected) <<std::endl;
 
 	TS_ASSERT_EQUALS(result, expected);
