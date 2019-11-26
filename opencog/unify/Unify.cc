@@ -1699,7 +1699,6 @@ Unify::ordered_glob_unify_rec(const HandleSeq &lhs, const HandleSeq &rhs,
 	Arity rhs_arity(rhs.size());
 
 	if (!lhs_arity and !rhs_arity) return SolutionSet(true);
-	// TODO: check termination criteria again
 	if (!rhs_arity or !lhs_arity) return SolutionSet(false);
 
 	auto head = unify(lhs[0], rhs[0], lhs_context, rhs_context);
@@ -1713,6 +1712,11 @@ Unify::ordered_glob_unify_rec(const HandleSeq &lhs, const HandleSeq &rhs,
 	sol.insert(rec1.begin(), rec1.end());
 
 	if (lhs[0]->get_type()==GLOB_NODE) {
+		auto ts = get_type_restrictions(local_variables, lhs[0]);
+		if (ts.empty())
+			register_var(local_variables, lhs[0], rhs[0]->get_type());
+		else if (*ts.begin() != rhs[0]->get_type()) return SolutionSet(false);
+
 		auto rec2 = ordered_glob_unify_rec(
 				lhs, tail(rhs),
 				lhs_context, rhs_context, local_variables);
@@ -1720,6 +1724,10 @@ Unify::ordered_glob_unify_rec(const HandleSeq &lhs, const HandleSeq &rhs,
 		sol.insert(rec2.begin(), rec2.end());
 
 		if (rhs[0]->get_type()==GLOB_NODE) {
+			auto ts = get_type_restrictions(local_variables, rhs[0]);
+			if (ts.empty())
+				register_var(local_variables, rhs[0], lhs[0]->get_type());
+			else if (*ts.begin() != lhs[0]->get_type()) return SolutionSet(false);
 			auto rec3 = ordered_glob_unify_rec(
 					tail(lhs), rhs,
 					lhs_context, rhs_context, local_variables);
@@ -1728,6 +1736,9 @@ Unify::ordered_glob_unify_rec(const HandleSeq &lhs, const HandleSeq &rhs,
 		}
 	}
 	else if (rhs[0]->get_type()==GLOB_NODE) {
+		auto ts = get_type_restrictions(local_variables, rhs[0]);
+		if (ts.empty()) register_var(local_variables, rhs[0], lhs[0]->get_type());
+		else if (*ts.begin() != lhs[0]->get_type()) return SolutionSet(false);
 		auto rec1 = ordered_glob_unify_rec(
 				tail(lhs), rhs,
 				lhs_context, rhs_context, local_variables);
