@@ -509,7 +509,7 @@ private:
 
 	/**
 	 * Unify all elements of lhs with all elements of rhs, in the
-	 * provided order where atleast one contains a globnode.
+	 * provided order.
 	 */
 	SolutionSet ordered_glob_unify_rec(const HandleSeq &lhs, const HandleSeq &rhs,
 	                               Context lhs_context = Context(),

@@ -115,8 +115,6 @@ public:
 
 	void setUp();
 
-	// TODO: THIS UNIT TESTS ARE VALID UNTIL JOINING SOLUTIONS THAT CONTAIN
-	//  GLOB_NODE IS SUPPORTED. UPDATE AS SOON AS JOIN IS IMPLEMENTED.
 	void test_simple_glob();
 	void test_simple_glob1();
 	void test_simple_glob1_alt1();
