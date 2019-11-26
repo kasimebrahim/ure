@@ -565,7 +565,7 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 		if (is_unordered(rh))
 			return unordered_glob_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
 		else
-			return ordered_glob_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
+			return ordered_glob_unify_rec(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
 	}
 
 	else if (lh_arity != rh_arity) return SolutionSet();
@@ -573,7 +573,7 @@ Unify::SolutionSet Unify::unify(const Handle& lh, const Handle& rh,
 	if (is_unordered(rh))
 		return unordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
 	else
-		return ordered_unify(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
+		return ordered_glob_unify_rec(lh->getOutgoingSet(), rh->getOutgoingSet(), lc, rc);
 }
 
 Unify::SolutionSet Unify::unordered_unify(const HandleSeq& lhs,
@@ -1686,6 +1686,62 @@ bool Unify::contain_glob(const Handle &handle) const {
 		if (h->get_type() == GLOB_NODE) return true;
 	}
 	return false;
+}
+
+Unify::SolutionSet
+Unify::ordered_glob_unify_rec(const HandleSeq &lhs, const HandleSeq &rhs,
+                          Context lhs_context, Context rhs_context,
+                          Variables local_variables) const
+{
+	SolutionSet sol(false);
+
+	Arity lhs_arity(lhs.size());
+	Arity rhs_arity(rhs.size());
+
+	if (!lhs_arity and !rhs_arity) return SolutionSet(true);
+	// TODO: check termination criteria again
+	if (!rhs_arity or !lhs_arity) return SolutionSet(false);
+
+	auto head = unify(lhs[0], rhs[0], lhs_context, rhs_context);
+
+	if (!head.is_satisfiable()) return SolutionSet(false);
+
+	auto rec1 = ordered_glob_unify_rec(
+			tail(lhs), tail(rhs),
+			lhs_context, rhs_context, local_variables);
+	rec1 = join(head, rec1);
+	sol.insert(rec1.begin(), rec1.end());
+
+	if (lhs[0]->get_type()==GLOB_NODE) {
+		auto rec2 = ordered_glob_unify_rec(
+				lhs, tail(rhs),
+				lhs_context, rhs_context, local_variables);
+		rec2 = join(head, rec2);
+		sol.insert(rec2.begin(), rec2.end());
+
+		if (rhs[0]->get_type()==GLOB_NODE) {
+			auto rec3 = ordered_glob_unify_rec(
+					tail(lhs), rhs,
+					lhs_context, rhs_context, local_variables);
+			rec3 = join(head, rec3);
+			sol.insert(rec3.begin(), rec3.end());
+		}
+	}
+	else if (rhs[0]->get_type()==GLOB_NODE) {
+		auto rec1 = ordered_glob_unify_rec(
+				tail(lhs), rhs,
+				lhs_context, rhs_context, local_variables);
+		rec1 = join(head, rec1);
+		sol.insert(rec1.begin(), rec1.end());
+	}
+
+	return sol;
+}
+
+HandleSeq Unify::tail(const HandleSeq& seq) const
+{
+	OC_ASSERT(!seq.empty());
+	return HandleSeq(std::next(seq.begin()), seq.end());
 }
 
 Unify::SolutionSet

@@ -511,6 +511,15 @@ private:
 	 * Unify all elements of lhs with all elements of rhs, in the
 	 * provided order where atleast one contains a globnode.
 	 */
+	SolutionSet ordered_glob_unify_rec(const HandleSeq &lhs, const HandleSeq &rhs,
+	                               Context lhs_context = Context(),
+	                               Context rhs_context = Context(),
+	                               Variables local_variables = Variables()) const;
+
+	/**
+	 * Unify all elements of lhs with all elements of rhs, in the
+	 * provided order where atleast one contains a globnode.
+	 */
 	SolutionSet ordered_glob_unify(const HandleSeq &lhs, const HandleSeq &rhs,
 	                                   Context lhs_context = Context(),
 	                                   Context rhs_context = Context(),
@@ -822,6 +831,8 @@ private:
 
 	inline TypeSet get_type_restrictions(const Variables &vars1,
 	                                     const Variables &vars2, const Handle &handle) const;
+
+	HandleSeq tail(const HandleSeq &seq) const;
 };
 
 bool unifiable(const Handle& lhs, const Handle& rhs,
